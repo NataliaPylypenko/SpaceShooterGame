@@ -18,6 +18,7 @@ player.x = appWidth / 2;
 player.y = appHeight - 64;
 app.stage.addChild(player);
 
+const maxBullets = 10;
 const bullets = [];
 const asteroids = [];
 
@@ -28,6 +29,13 @@ window.addEventListener("keydown", (e) => {
     } else if (e.key == "ArrowRight" && player.x < appWidth - player.width / 2) {
         player.x += 10;
     } else if (e.key == " ") {
+        createBullet()
+    }
+});
+
+// create bullet
+function createBullet() {
+    if (bullets.length < maxBullets) {
         const bullet = new PIXI.Graphics();
         bullet.beginFill(0xFFFF00);
         bullet.drawCircle(0, 0, 9);
@@ -48,8 +56,7 @@ window.addEventListener("keydown", (e) => {
             }
         }, 1000 / 60);
     }
-});
-
+}
 
 // create asteroid
 function createAsteroid() {
