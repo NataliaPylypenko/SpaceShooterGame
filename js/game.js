@@ -37,7 +37,7 @@ window.addEventListener("keydown", (e) => {
 function createBullet() {
     if (bullets.length < maxBullets) {
         const bullet = new PIXI.Graphics();
-        bullet.beginFill(0xFFFF00);
+        bullet.beginFill(0xFFFFFF);
         bullet.drawCircle(0, 0, 9);
         bullet.endFill();
         bullet.x = player.x;
@@ -108,7 +108,50 @@ function detectCollisions() {
     }
 }
 
+// create message "YOU WIN"
+const winText = new PIXI.Text('YOU WIN', {
+    fontFamily: 'Arial',
+    fontSize: 48,
+    fill: 0x00FF00,
+    align: 'center',
+});
+winText.anchor.set(0.5);
+winText.x = appWidth / 2;
+winText.y = appHeight / 2;
+
+app.stage.addChild(winText);
+winText.visible = false;
+
+// create message "YOU LOSE"
+const loseText = new PIXI.Text('YOU LOSE', {
+    fontFamily: 'Arial',
+    fontSize: 48,
+    fill: 0xFF0000,
+    align: 'center',
+});
+loseText.anchor.set(0.5);
+loseText.x = appWidth / 2;
+loseText.y = appHeight / 2;
+
+app.stage.addChild(loseText);
+loseText.visible = false;
+
+function checkGameStatus() {
+    if (asteroids.length === 0) {
+        winText.visible = true;
+        // stop animation?
+    } else if (bullets.length === 10) {
+        loseText.visible = true;
+        // stop animation?
+    }
+}
+
+
 // executing the code on each frame of the animation
 app.ticker.add(() => {
     detectCollisions();
+    checkGameStatus();
+
+    // console.log(asteroids.length)
+    // console.log(bullets.length)
 });
