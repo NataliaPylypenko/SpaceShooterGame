@@ -5,9 +5,9 @@ const app = new PIXI.Application({ width: appWidth, height: appHeight });
 document.body.appendChild(app.view);
 
 // Constants
-const NUMBER_ASTEROIDS = 3;
+const NUMBER_ASTEROIDS = 10;
 const MAX_BULLETS = NUMBER_ASTEROIDS;
-const GAME_TIME = 10;
+const GAME_TIME = 60;
 
 const bullets = [];
 const asteroids = [];
