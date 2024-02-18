@@ -5,9 +5,14 @@ const app = new PIXI.Application({ width: appWidth, height: appHeight });
 document.body.appendChild(app.view);
 
 // Constants
-const COUNT = 10;
+const NUMBER_ASTEROIDS = 3;
+const MAX_BULLETS = NUMBER_ASTEROIDS;
+const GAME_TIME = 10;
+
 const bullets = [];
 const asteroids = [];
+let remainingBullets = MAX_BULLETS;
+let remainingTime = GAME_TIME;
 
 // Create Elements And Add To Scene
 // Background
@@ -25,7 +30,10 @@ app.stage.addChild(player);
 
 // Bullet
 const createBullet = () => {
-    if (bullets.length < COUNT) {
+    remainingBullets--;
+    updateBullets();
+
+    if (bullets.length < MAX_BULLETS) {
         const bullet = new PIXI.Graphics();
         bullet.beginFill(0xFFFFFF);
         bullet.drawCircle(0, 0, 9);
@@ -93,8 +101,31 @@ loseText.y = appHeight / 2;
 app.stage.addChild(loseText);
 loseText.visible = false;
 
+// Shots
+const bulletText = new PIXI.Text('Bullets: ' + remainingBullets, {
+    fontFamily: 'Arial',
+    fontSize: 24,
+    fill: 0xFFFFFF,
+});
+bulletText.anchor.set(0, 0);
+bulletText.x = 10;
+bulletText.y = 10;
+app.stage.addChild(bulletText);
+
+// Timer
+const timerText = new PIXI.Text('Time: ' + remainingTime, {
+    fontFamily: 'Arial',
+    fontSize: 24,
+    fill: 0xFFFFFF,
+});
+timerText.anchor.set(1, 0);
+timerText.x = appWidth - 10;
+timerText.y = 10;
+app.stage.addChild(timerText);
+
+
 // Some Asteroids
-for (let i = 0; i < COUNT; i++) {
+for (let i = 0; i < NUMBER_ASTEROIDS; i++) {
     createAsteroid();
 }
 
@@ -121,7 +152,7 @@ const detectCollisions = () => {
 const checkGameStatus = () => {
     if (asteroids.length === 0) {
         winText.visible = true;
-    } else if (bullets.length === COUNT) {
+    } else if (bullets.length === MAX_BULLETS) {
         loseText.visible = true;
     }
 };
@@ -135,6 +166,28 @@ const handlePlayerAction = e => {
         createBullet()
     }
 };
+
+const updateBullets = () => {
+    bulletText.text = 'Bullets: ' + remainingBullets;
+};
+
+const updateTimer = () => {
+    timerText.text = 'Time: ' + remainingTime;
+};
+
+const startGameTimer = () => {
+    const gameTimer = setInterval(() => {
+        remainingTime--;
+        updateTimer();
+
+        if (remainingTime <= 0) {
+            clearInterval(gameTimer);
+            loseText.visible = true;
+        }
+    }, 1000);
+};
+
+startGameTimer();
 
 // Player Actions
 window.addEventListener("keydown", handlePlayerAction);
