@@ -13,10 +13,10 @@ module.exports  = (env) => {
     const isProd = !isDev;
 
     return {
-        mode: env.mode ?? 'development',
+        mode: env.mode && 'development',
         entry: {
             // module: ['@babel/polyfill', `${PATHS.src}/js/your-module.js`],
-            common: ['@babel/polyfill', `${PATHS.src}/js/common.js`]
+            common: ['@babel/polyfill', `${PATHS.src}/js/common.ts`]
         },
         output: {
             path: PATHS.web,
@@ -28,7 +28,8 @@ module.exports  = (env) => {
             alias: {
                 '@': PATHS.src,
                 '@assets': `${PATHS.src}/assets`,
-            }
+            },
+            extensions: ['.tsx', '.ts', '.js'],
         },
         module: {
             rules: [
@@ -36,6 +37,11 @@ module.exports  = (env) => {
                     test: /\.js$/,
                     exclude: /node_modules/,
                     use: "babel-loader",
+                },
+                {
+                    test: /\.tsx?$/,
+                    use: 'ts-loader',
+                    exclude: /node_modules/,
                 },
                 {
                     test: /\.((c|sa|sc)ss)$/,
@@ -90,7 +96,7 @@ module.exports  = (env) => {
         ],
         devtool: isDev && 'inline-source-map',
         devServer: isDev ? {
-            port: env.port ?? 8081,
+            port: env.port && 8081,
             open: true
         } : undefined,
     }

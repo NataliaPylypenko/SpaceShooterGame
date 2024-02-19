@@ -4,43 +4,45 @@ import '../scss/style.scss';
 import * as PIXI from 'pixi.js';
 
 // Create Scene And Add To Body
-const appWidth = 1280;
-const appHeight = 720;
-const app = new PIXI.Application({ width: appWidth, height: appHeight });
+const appWidth: number = 1280;
+const appHeight: number = 720;
+// const app: PIXI.Application = new PIXI.Application({ width: appWidth, height: appHeight });
+
+const app = new PIXI.Application<HTMLCanvasElement>({ width: appWidth, height: appHeight });
 document.body.appendChild(app.view);
 
 // Constants
-const NUMBER_ASTEROIDS = 3;
-const MAX_BULLETS = NUMBER_ASTEROIDS;
-const GAME_TIME = 60;
+const NUMBER_ASTEROIDS: number = 3;
+const MAX_BULLETS: number = NUMBER_ASTEROIDS;
+const GAME_TIME: number = 60;
 
-const bullets = [];
-const asteroids = [];
-let remainingBullets = MAX_BULLETS;
-let remainingTime = GAME_TIME;
+const bullets: PIXI.Graphics[] = [];
+const asteroids: PIXI.Graphics[] = [];
+let remainingBullets: number = MAX_BULLETS;
+let remainingTime: number = GAME_TIME;
 
 // Create Elements And Add To Scene
 // Background
-const background = PIXI.Sprite.from("./image/space.jpg");
+const background: PIXI.Sprite = PIXI.Sprite.from("./image/space.jpg");
 background.width = appWidth;
 background.height = appHeight;
 app.stage.addChild(background);
 
 // Player
-const player = PIXI.Sprite.from('image/rocket.png');
+const player: PIXI.Sprite = PIXI.Sprite.from('image/rocket.png');
 player.anchor.set(0.5);
 player.x = appWidth / 2;
 player.y = appHeight - 64;
 app.stage.addChild(player);
 
 // Bullet
-const createBullet = () => {
+const createBullet = (): void => {
     if (remainingBullets > 0) {
         remainingBullets--;
         updateBullets();
 
         if (bullets.length < MAX_BULLETS) {
-            const bullet = new PIXI.Graphics();
+            const bullet: PIXI.Graphics = new PIXI.Graphics();
             bullet.beginFill(0xFFFFFF);
             bullet.drawCircle(0, 0, 9);
             bullet.endFill();
@@ -62,8 +64,8 @@ const createBullet = () => {
 };
 
 // Asteroid
-const createAsteroid = () => {
-    const asteroid = new PIXI.Graphics();
+const createAsteroid = (): void => {
+    const asteroid: PIXI.Graphics = new PIXI.Graphics();
     asteroid.beginFill(0xCCCCCC);
     asteroid.drawCircle(0, 0, 30);
     asteroid.endFill();
@@ -83,7 +85,7 @@ const createAsteroid = () => {
 };
 
 // Message "YOU WIN"
-const winText = new PIXI.Text('YOU WIN', {
+const winText: PIXI.Text = new PIXI.Text('YOU WIN', {
     fontFamily: 'Arial',
     fontSize: 48,
     fill: 0x00FF00,
@@ -96,7 +98,7 @@ app.stage.addChild(winText);
 winText.visible = false;
 
 // Message "YOU LOSE"
-const loseText = new PIXI.Text('YOU LOSE', {
+const loseText: PIXI.Text = new PIXI.Text('YOU LOSE', {
     fontFamily: 'Arial',
     fontSize: 48,
     fill: 0xFF0000,
@@ -109,7 +111,7 @@ app.stage.addChild(loseText);
 loseText.visible = false;
 
 // Shots
-const bulletText = new PIXI.Text('Bullets: ' + remainingBullets, {
+const bulletText: PIXI.Text = new PIXI.Text('Bullets: ' + remainingBullets, {
     fontFamily: 'Arial',
     fontSize: 24,
     fill: 0xFFFFFF,
@@ -120,7 +122,7 @@ bulletText.y = 10;
 app.stage.addChild(bulletText);
 
 // Timer
-const timerText = new PIXI.Text('Time: ' + remainingTime, {
+const timerText: PIXI.Text = new PIXI.Text('Time: ' + remainingTime, {
     fontFamily: 'Arial',
     fontSize: 24,
     fill: 0xFFFFFF,
@@ -130,17 +132,16 @@ timerText.x = appWidth - 10;
 timerText.y = 10;
 app.stage.addChild(timerText);
 
-
 // Some Asteroids
-for (let i = 0; i < NUMBER_ASTEROIDS; i++) {
+for (let i: number = 0; i < NUMBER_ASTEROIDS; i++) {
     createAsteroid();
 }
 
-const detectCollisions = () => {
-    for (let i = bullets.length - 1; i >= 0; i--) {
-        const bullet = bullets[i];
-        for (let j = asteroids.length - 1; j >= 0; j--) {
-            const asteroid = asteroids[j];
+const detectCollisions = (): void => {
+    for (let i: number = bullets.length - 1; i >= 0; i--) {
+        const bullet: PIXI.Graphics = bullets[i];
+        for (let j: number = asteroids.length - 1; j >= 0; j--) {
+            const asteroid: PIXI.Graphics = asteroids[j];
 
             if (bullet.x > asteroid.x - asteroid.width / 2 &&
                 bullet.x < asteroid.x + asteroid.width / 2 &&
@@ -156,7 +157,7 @@ const detectCollisions = () => {
     }
 };
 
-const checkGameStatus = () => {
+const checkGameStatus = (): void => {
     if (asteroids.length === 0) {
         winText.visible = true;
         clearInterval(gameTimer);
@@ -165,7 +166,7 @@ const checkGameStatus = () => {
     }
 };
 
-const handlePlayerAction = e => {
+const handlePlayerAction = (e: KeyboardEvent): void => {
     if (e.key == "ArrowLeft" && player.x - player.width / 2 > 0) {
         player.x -= 10;
     } else if (e.key == "ArrowRight" && player.x < appWidth - player.width / 2) {
@@ -175,16 +176,17 @@ const handlePlayerAction = e => {
     }
 };
 
-const updateBullets = () => {
+const updateBullets = (): void => {
     bulletText.text = 'Bullets: ' + remainingBullets;
 };
 
-const updateTimer = () => {
+const updateTimer = (): void => {
     timerText.text = 'Time: ' + remainingTime;
 };
 
-// const startGameTimer = () => {
-    const gameTimer = setInterval(() => {
+let gameTimer: NodeJS.Timeout;
+const startGameTimer = (): void => {
+    gameTimer = setInterval(() => {
         remainingTime--;
         updateTimer();
 
@@ -193,9 +195,9 @@ const updateTimer = () => {
             loseText.visible = true;
         }
     }, 1000);
-// };
-//
-// startGameTimer();
+};
+
+startGameTimer();
 
 // Player Actions
 window.addEventListener("keydown", handlePlayerAction);
