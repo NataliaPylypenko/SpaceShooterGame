@@ -6,13 +6,11 @@ import * as PIXI from 'pixi.js';
 // Create Scene And Add To Body
 const appWidth: number = 1280;
 const appHeight: number = 720;
-// const app: PIXI.Application = new PIXI.Application({ width: appWidth, height: appHeight });
-
 const app = new PIXI.Application<HTMLCanvasElement>({ width: appWidth, height: appHeight });
 document.body.appendChild(app.view);
 
 // Constants
-const NUMBER_ASTEROIDS: number = 3;
+const NUMBER_ASTEROIDS: number = 10;
 const MAX_BULLETS: number = NUMBER_ASTEROIDS;
 const GAME_TIME: number = 60;
 
@@ -161,8 +159,10 @@ const checkGameStatus = (): void => {
     if (asteroids.length === 0) {
         winText.visible = true;
         clearInterval(gameTimer);
+        app.ticker.stop();
     } else if (bullets.length === MAX_BULLETS) {
         loseText.visible = true;
+        app.ticker.stop();
     }
 };
 
@@ -193,6 +193,7 @@ const startGameTimer = (): void => {
         if (remainingTime <= 0) {
             clearInterval(gameTimer);
             loseText.visible = true;
+            app.ticker.stop();
         }
     }, 1000);
 };
