@@ -30,7 +30,6 @@ __webpack_require__.r(__webpack_exports__);
 // Create Scene And Add To Body
 var appWidth = 1280;
 var appHeight = 720;
-// const app: PIXI.Application = new PIXI.Application({ width: appWidth, height: appHeight });
 var app = new pixi_js__WEBPACK_IMPORTED_MODULE_1__.Application({ width: appWidth, height: appHeight });
 document.body.appendChild(app.view);
 // Constants
@@ -164,9 +163,11 @@ var checkGameStatus = function () {
     if (asteroids.length === 0) {
         winText.visible = true;
         clearInterval(gameTimer);
+        app.ticker.stop();
     }
     else if (bullets.length === MAX_BULLETS) {
         loseText.visible = true;
+        app.ticker.stop();
     }
 };
 var handlePlayerAction = function (e) {
@@ -194,6 +195,7 @@ var startGameTimer = function () {
         if (remainingTime <= 0) {
             clearInterval(gameTimer);
             loseText.visible = true;
+            app.ticker.stop();
         }
     }, 1000);
 };
@@ -204,6 +206,7 @@ window.addEventListener("keydown", handlePlayerAction);
 app.ticker.add(function () {
     detectCollisions();
     checkGameStatus();
+    console.log('go');
 });
 
 
