@@ -33,9 +33,10 @@ var appHeight = 720;
 var app = new pixi_js__WEBPACK_IMPORTED_MODULE_1__.Application({ width: appWidth, height: appHeight });
 document.body.appendChild(app.view);
 // Constants
-var NUMBER_ASTEROIDS = 3;
-var MAX_BULLETS = NUMBER_ASTEROIDS;
-var GAME_TIME = 60;
+var GAME_TIME = 10;
+var NUMBER = 3;
+var MAX_ASTEROIDS = NUMBER;
+var MAX_BULLETS = NUMBER;
 var bullets = [];
 var asteroids = [];
 var remainingBullets = MAX_BULLETS;
@@ -139,7 +140,7 @@ timerText.x = appWidth - 10;
 timerText.y = 10;
 app.stage.addChild(timerText);
 // Some Asteroids
-for (var i = 0; i < NUMBER_ASTEROIDS; i++) {
+for (var i = 0; i < MAX_ASTEROIDS; i++) {
     createAsteroid();
 }
 var detectCollisions = function () {
@@ -162,13 +163,18 @@ var detectCollisions = function () {
 var checkGameStatus = function () {
     if (asteroids.length === 0) {
         winText.visible = true;
-        clearInterval(gameTimer);
-        app.ticker.stop();
+        stopAnimation(0);
     }
     else if (bullets.length === MAX_BULLETS) {
         loseText.visible = true;
-        app.ticker.stop();
+        stopAnimation(3000);
     }
+};
+var stopAnimation = function (time) {
+    setTimeout(function () {
+        clearInterval(gameTimer);
+        app.ticker.stop();
+    }, time);
 };
 var handlePlayerAction = function (e) {
     if (e.key == "ArrowLeft" && player.x - player.width / 2 > 0) {
@@ -193,9 +199,8 @@ var startGameTimer = function () {
         remainingTime--;
         updateTimer();
         if (remainingTime <= 0) {
-            clearInterval(gameTimer);
             loseText.visible = true;
-            app.ticker.stop();
+            stopAnimation(500);
         }
     }, 1000);
 };
@@ -206,7 +211,6 @@ window.addEventListener("keydown", handlePlayerAction);
 app.ticker.add(function () {
     detectCollisions();
     checkGameStatus();
-    console.log('go');
 });
 
 
