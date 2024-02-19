@@ -1,3 +1,8 @@
+// SCSS
+import '../scss/style.scss';
+
+import * as PIXI from 'pixi.js';
+
 // Create Scene And Add To Body
 const appWidth = 1280;
 const appHeight = 720;
@@ -5,7 +10,7 @@ const app = new PIXI.Application({ width: appWidth, height: appHeight });
 document.body.appendChild(app.view);
 
 // Constants
-const NUMBER_ASTEROIDS = 10;
+const NUMBER_ASTEROIDS = 3;
 const MAX_BULLETS = NUMBER_ASTEROIDS;
 const GAME_TIME = 60;
 
@@ -154,6 +159,7 @@ const detectCollisions = () => {
 const checkGameStatus = () => {
     if (asteroids.length === 0) {
         winText.visible = true;
+        clearInterval(gameTimer);
     } else if (bullets.length === MAX_BULLETS) {
         loseText.visible = true;
     }
@@ -177,7 +183,7 @@ const updateTimer = () => {
     timerText.text = 'Time: ' + remainingTime;
 };
 
-const startGameTimer = () => {
+// const startGameTimer = () => {
     const gameTimer = setInterval(() => {
         remainingTime--;
         updateTimer();
@@ -187,9 +193,9 @@ const startGameTimer = () => {
             loseText.visible = true;
         }
     }, 1000);
-};
-
-startGameTimer();
+// };
+//
+// startGameTimer();
 
 // Player Actions
 window.addEventListener("keydown", handlePlayerAction);

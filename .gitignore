@@ -1,1 +1,9 @@
+# Default
 .idea
+package-lock.json
+
+# Node
+/node_modules
+
+# Folders
+/web
