@@ -30,27 +30,29 @@ app.stage.addChild(player);
 
 // Bullet
 const createBullet = () => {
-    remainingBullets--;
-    updateBullets();
+    if (remainingBullets > 0) {
+        remainingBullets--;
+        updateBullets();
 
-    if (bullets.length < MAX_BULLETS) {
-        const bullet = new PIXI.Graphics();
-        bullet.beginFill(0xFFFFFF);
-        bullet.drawCircle(0, 0, 9);
-        bullet.endFill();
-        bullet.x = player.x;
-        bullet.y = player.y;
-        app.stage.addChild(bullet);
-        bullets.push(bullet);
+        if (bullets.length < MAX_BULLETS) {
+            const bullet = new PIXI.Graphics();
+            bullet.beginFill(0xFFFFFF);
+            bullet.drawCircle(0, 0, 9);
+            bullet.endFill();
+            bullet.x = player.x;
+            bullet.y = player.y;
+            app.stage.addChild(bullet);
+            bullets.push(bullet);
 
-        const moveBullet = setInterval(() => {
-            bullet.y -= 5;
+            const moveBullet = setInterval(() => {
+                bullet.y -= 5;
 
-            if (bullet.y < 0) {
-                app.stage.removeChild(bullet);
-                clearInterval(moveBullet);
-            }
-        }, 1000 / 60);
+                if (bullet.y < 0) {
+                    app.stage.removeChild(bullet);
+                    clearInterval(moveBullet);
+                }
+            }, 1000 / 60);
+        }
     }
 };
 
