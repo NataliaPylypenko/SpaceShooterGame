@@ -15,10 +15,17 @@ const NUMBER: number = 10;
 const MAX_ASTEROIDS: number = NUMBER;
 const MAX_BULLETS: number = NUMBER;
 
-const bullets: PIXI.Graphics[] = [];
-const asteroids: PIXI.Graphics[] = [];
+let bullets: PIXI.Graphics[] = [];
+let asteroids: PIXI.Graphics[] = [];
 let remainingBullets: number = MAX_BULLETS;
 let remainingTime: number = GAME_TIME;
+
+let gameTimer: NodeJS.Timeout;
+let levelTwoStarted = false;
+
+let boss: PIXI.Sprite;
+let bossHP: number = 4;
+let bossHealthBar: PIXI.Graphics;
 
 // Create Elements And Add To Scene
 // Background
@@ -131,6 +138,23 @@ timerText.x = appWidth - 10;
 timerText.y = 10;
 app.stage.addChild(timerText);
 
+// Boss
+const createBoss = (): void => {
+    boss = PIXI.Sprite.from('image/boss.png');
+    boss.anchor.set(0.5);
+    boss.x = appWidth / 2;
+    boss.y = 64;
+    app.stage.addChild(boss);
+
+    bossHealthBar = new PIXI.Graphics();
+    bossHealthBar.beginFill(0xFF0000);
+    bossHealthBar.drawRect(0, 0, 100, 10);
+    bossHealthBar.endFill();
+    bossHealthBar.x = appWidth / 2 - 50;
+    bossHealthBar.y = 50;
+    app.stage.addChild(bossHealthBar);
+};
+
 // Some Asteroids
 for (let i: number = 0; i < MAX_ASTEROIDS; i++) {
     createAsteroid();
@@ -157,12 +181,13 @@ const detectCollisions = (): void => {
 };
 
 const checkGameStatus = (): void => {
-    if (asteroids.length === 0) {
-        winText.visible = true;
-        stopAnimation(0)
+    if (asteroids.length === 0 && !levelTwoStarted) {
+        clearInterval(gameTimer);
+        levelTwoStarted = true;
+        startLevelTwo();
     } else if (bullets.length === MAX_BULLETS) {
         loseText.visible = true;
-        stopAnimation(3000)
+        stopAnimation(3000);
     }
 };
 
@@ -179,7 +204,7 @@ const handlePlayerAction = (e: KeyboardEvent): void => {
     } else if (e.key == "ArrowRight" && player.x < appWidth - player.width / 2) {
         player.x += 10;
     } else if (e.key == " ") {
-        createBullet()
+        createBullet();
     }
 };
 
@@ -191,7 +216,6 @@ const updateTimer = (): void => {
     timerText.text = 'Time: ' + remainingTime;
 };
 
-let gameTimer: NodeJS.Timeout;
 const startGameTimer = (): void => {
     gameTimer = setInterval(() => {
         remainingTime--;
@@ -204,13 +228,36 @@ const startGameTimer = (): void => {
     }, 1000);
 };
 
+const resetGame = (): void => {
+    asteroids.forEach(asteroid => app.stage.removeChild(asteroid));
+
+    remainingBullets = MAX_BULLETS;
+    remainingTime = GAME_TIME;
+    bulletText.text = 'Bullets: ' + remainingBullets;
+    timerText.text = 'Time: ' + remainingTime;
+
+    player.x = appWidth / 2;
+    player.y = appHeight - 64;
+
+    winText.visible = false;
+    loseText.visible = false;
+
+    startGameTimer();
+};
+
 startGameTimer();
 
 // Player Actions
 window.addEventListener("keydown", handlePlayerAction);
 
-// Animation
+// Start Level I
 app.ticker.add(() => {
     detectCollisions();
     checkGameStatus();
 });
+
+// Start Level II
+const startLevelTwo = (): void => {
+    resetGame();
+    createBoss();
+};
