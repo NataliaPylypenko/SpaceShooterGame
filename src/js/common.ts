@@ -10,8 +10,8 @@ const app = new PIXI.Application<HTMLCanvasElement>({ width: appWidth, height: a
 document.body.appendChild(app.view);
 
 // Constants
-const GAME_TIME: number = 10;
-const NUMBER: number = 3;
+const GAME_TIME: number = 60;
+const NUMBER: number = 10;
 const MAX_ASTEROIDS: number = NUMBER;
 const MAX_BULLETS: number = NUMBER;
 
