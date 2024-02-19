@@ -41,6 +41,11 @@ var bullets = [];
 var asteroids = [];
 var remainingBullets = MAX_BULLETS;
 var remainingTime = GAME_TIME;
+var gameTimer;
+var levelTwoStarted = false;
+var boss;
+var bossHP = 4;
+var bossHealthBar;
 // Create Elements And Add To Scene
 // Background
 var background = pixi_js__WEBPACK_IMPORTED_MODULE_1__.Sprite.from("./image/space.jpg");
@@ -139,6 +144,21 @@ timerText.anchor.set(1, 0);
 timerText.x = appWidth - 10;
 timerText.y = 10;
 app.stage.addChild(timerText);
+// Boss
+var createBoss = function () {
+    boss = pixi_js__WEBPACK_IMPORTED_MODULE_1__.Sprite.from('image/boss.png');
+    boss.anchor.set(0.5);
+    boss.x = appWidth / 2;
+    boss.y = 64;
+    app.stage.addChild(boss);
+    bossHealthBar = new pixi_js__WEBPACK_IMPORTED_MODULE_1__.Graphics();
+    bossHealthBar.beginFill(0xFF0000);
+    bossHealthBar.drawRect(0, 0, 100, 10);
+    bossHealthBar.endFill();
+    bossHealthBar.x = appWidth / 2 - 50;
+    bossHealthBar.y = 50;
+    app.stage.addChild(bossHealthBar);
+};
 // Some Asteroids
 for (var i = 0; i < MAX_ASTEROIDS; i++) {
     createAsteroid();
@@ -161,9 +181,10 @@ var detectCollisions = function () {
     }
 };
 var checkGameStatus = function () {
-    if (asteroids.length === 0) {
-        winText.visible = true;
-        stopAnimation(0);
+    if (asteroids.length === 0 && !levelTwoStarted) {
+        clearInterval(gameTimer);
+        levelTwoStarted = true;
+        startLevelTwo();
     }
     else if (bullets.length === MAX_BULLETS) {
         loseText.visible = true;
@@ -193,7 +214,6 @@ var updateBullets = function () {
 var updateTimer = function () {
     timerText.text = 'Time: ' + remainingTime;
 };
-var gameTimer;
 var startGameTimer = function () {
     gameTimer = setInterval(function () {
         remainingTime--;
@@ -204,14 +224,31 @@ var startGameTimer = function () {
         }
     }, 1000);
 };
+var resetGame = function () {
+    asteroids.forEach(function (asteroid) { return app.stage.removeChild(asteroid); });
+    remainingBullets = MAX_BULLETS;
+    remainingTime = GAME_TIME;
+    bulletText.text = 'Bullets: ' + remainingBullets;
+    timerText.text = 'Time: ' + remainingTime;
+    player.x = appWidth / 2;
+    player.y = appHeight - 64;
+    winText.visible = false;
+    loseText.visible = false;
+    startGameTimer();
+};
 startGameTimer();
 // Player Actions
 window.addEventListener("keydown", handlePlayerAction);
-// Animation
+// Start Level I
 app.ticker.add(function () {
     detectCollisions();
     checkGameStatus();
 });
+// Start Level II
+var startLevelTwo = function () {
+    resetGame();
+    createBoss();
+};
 
 
 /***/ }),
