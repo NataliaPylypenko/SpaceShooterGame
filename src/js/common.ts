@@ -10,9 +10,10 @@ const app = new PIXI.Application<HTMLCanvasElement>({ width: appWidth, height: a
 document.body.appendChild(app.view);
 
 // Constants
-const NUMBER_ASTEROIDS: number = 10;
-const MAX_BULLETS: number = NUMBER_ASTEROIDS;
-const GAME_TIME: number = 60;
+const GAME_TIME: number = 10;
+const NUMBER: number = 3;
+const MAX_ASTEROIDS: number = NUMBER;
+const MAX_BULLETS: number = NUMBER;
 
 const bullets: PIXI.Graphics[] = [];
 const asteroids: PIXI.Graphics[] = [];
@@ -131,7 +132,7 @@ timerText.y = 10;
 app.stage.addChild(timerText);
 
 // Some Asteroids
-for (let i: number = 0; i < NUMBER_ASTEROIDS; i++) {
+for (let i: number = 0; i < MAX_ASTEROIDS; i++) {
     createAsteroid();
 }
 
@@ -158,12 +159,18 @@ const detectCollisions = (): void => {
 const checkGameStatus = (): void => {
     if (asteroids.length === 0) {
         winText.visible = true;
-        clearInterval(gameTimer);
-        app.ticker.stop();
+        stopAnimation(0)
     } else if (bullets.length === MAX_BULLETS) {
         loseText.visible = true;
-        app.ticker.stop();
+        stopAnimation(3000)
     }
+};
+
+const stopAnimation = (time: number) => {
+    setTimeout(() => {
+        clearInterval(gameTimer);
+        app.ticker.stop();
+    }, time);
 };
 
 const handlePlayerAction = (e: KeyboardEvent): void => {
@@ -191,9 +198,8 @@ const startGameTimer = (): void => {
         updateTimer();
 
         if (remainingTime <= 0) {
-            clearInterval(gameTimer);
             loseText.visible = true;
-            app.ticker.stop();
+            stopAnimation(500)
         }
     }, 1000);
 };
