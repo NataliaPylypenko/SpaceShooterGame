@@ -33,8 +33,8 @@ var appHeight = 720;
 var app = new pixi_js__WEBPACK_IMPORTED_MODULE_1__.Application({ width: appWidth, height: appHeight });
 document.body.appendChild(app.view);
 // Constants
-var GAME_TIME = 10;
-var NUMBER = 3;
+var GAME_TIME = 60;
+var NUMBER = 10;
 var MAX_ASTEROIDS = NUMBER;
 var MAX_BULLETS = NUMBER;
 var bullets = [];
