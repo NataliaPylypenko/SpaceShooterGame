@@ -34,7 +34,7 @@ var app = new pixi_js__WEBPACK_IMPORTED_MODULE_1__.Application({ width: appWidth
 document.body.appendChild(app.view);
 // Constants
 var GAME_TIME = 60;
-var NUMBER = 10;
+var NUMBER = 4;
 var MAX_ASTEROIDS = NUMBER;
 var MAX_BULLETS = NUMBER;
 var bullets = [];
@@ -46,6 +46,8 @@ var levelTwoStarted = false;
 var boss;
 var bossHP = 4;
 var bossHealthBar;
+var bossSpeed = 2;
+var lastBossBulletTime = 0;
 // Create Elements And Add To Scene
 // Background
 var background = pixi_js__WEBPACK_IMPORTED_MODULE_1__.Sprite.from("./image/space.jpg");
@@ -149,15 +151,39 @@ var createBoss = function () {
     boss = pixi_js__WEBPACK_IMPORTED_MODULE_1__.Sprite.from('image/boss.png');
     boss.anchor.set(0.5);
     boss.x = appWidth / 2;
-    boss.y = 64;
+    boss.y = 120;
     app.stage.addChild(boss);
     bossHealthBar = new pixi_js__WEBPACK_IMPORTED_MODULE_1__.Graphics();
     bossHealthBar.beginFill(0xFF0000);
     bossHealthBar.drawRect(0, 0, 100, 10);
     bossHealthBar.endFill();
     bossHealthBar.x = appWidth / 2 - 50;
-    bossHealthBar.y = 50;
+    bossHealthBar.y = 10;
     app.stage.addChild(bossHealthBar);
+};
+// BossBullet
+var createBossBullet = function () {
+    var bossBullet = new pixi_js__WEBPACK_IMPORTED_MODULE_1__.Graphics();
+    bossBullet.beginFill(0xFF0000);
+    bossBullet.drawCircle(boss.x, boss.y, 20);
+    bossBullet.endFill();
+    app.stage.addChild(bossBullet);
+    var moveBossBullet = setInterval(function () {
+        bossBullet.y += 5;
+        if (bossBullet.y > appHeight) {
+            clearInterval(moveBossBullet);
+            app.stage.removeChild(bossBullet);
+        }
+        else if (bossBullet.x > player.x - player.width / 2 &&
+            bossBullet.x < player.x + player.width / 2 &&
+            bossBullet.y > player.y - player.height / 2 &&
+            bossBullet.y < player.y + player.height / 2) {
+            loseText.visible = true;
+            stopAnimation(3000);
+            clearInterval(moveBossBullet);
+            app.stage.removeChild(bossBullet);
+        }
+    }, 1000 / 60);
 };
 // Some Asteroids
 for (var i = 0; i < MAX_ASTEROIDS; i++) {
@@ -190,6 +216,9 @@ var checkGameStatus = function () {
         loseText.visible = true;
         stopAnimation(3000);
     }
+    else if (asteroids.length === 0) {
+        detectCollisionsWithBoss();
+    }
 };
 var stopAnimation = function (time) {
     setTimeout(function () {
@@ -208,6 +237,14 @@ var handlePlayerAction = function (e) {
         createBullet();
     }
 };
+var moveBoss = function () {
+    if (boss) {
+        boss.x += bossSpeed;
+        if (boss.x < boss.width / 2 || boss.x > appWidth - boss.width / 2) {
+            bossSpeed *= -1;
+        }
+    }
+};
 var updateBullets = function () {
     bulletText.text = 'Bullets: ' + remainingBullets;
 };
@@ -224,6 +261,7 @@ var startGameTimer = function () {
         }
     }, 1000);
 };
+startGameTimer();
 var resetGame = function () {
     asteroids.forEach(function (asteroid) { return app.stage.removeChild(asteroid); });
     remainingBullets = MAX_BULLETS;
@@ -236,13 +274,45 @@ var resetGame = function () {
     loseText.visible = false;
     startGameTimer();
 };
-startGameTimer();
+var hitBoss = function () {
+    bossHP--;
+    bossHealthBar.clear();
+    bossHealthBar.beginFill(0xFF0000);
+    bossHealthBar.drawRect(0, 0, 100 * (bossHP / 4), 10);
+    bossHealthBar.endFill();
+    if (bossHP === 0) {
+        winText.text = 'YOU WIN';
+        winText.visible = true;
+        stopAnimation(0);
+    }
+};
+var detectCollisionsWithBoss = function () {
+    for (var i = bullets.length - 1; i >= 0; i--) {
+        var bullet = bullets[i];
+        if (bullet.x > boss.x - boss.width / 2 &&
+            bullet.x < boss.x + boss.width / 2 &&
+            bullet.y > boss.y - boss.height / 2 &&
+            bullet.y < boss.y + boss.height / 2) {
+            hitBoss();
+            app.stage.removeChild(bullet);
+            bullets.splice(i, 1);
+        }
+    }
+};
 // Player Actions
 window.addEventListener("keydown", handlePlayerAction);
 // Start Level I
 app.ticker.add(function () {
     detectCollisions();
     checkGameStatus();
+    if (boss) {
+        moveBoss();
+        var currentTime = Date.now();
+        if (currentTime - lastBossBulletTime >= 2000) {
+            createBossBullet();
+            lastBossBulletTime = currentTime;
+        }
+    }
 });
 // Start Level II
 var startLevelTwo = function () {
