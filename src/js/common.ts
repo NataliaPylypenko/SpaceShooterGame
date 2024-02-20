@@ -10,8 +10,8 @@ const app = new PIXI.Application<HTMLCanvasElement>({ width: appWidth, height: a
 document.body.appendChild(app.view);
 
 // Constants
-const GAME_TIME: number = 60;
-const NUMBER: number = 10;
+const GAME_TIME: number = 30;
+const NUMBER: number = 4;
 const MAX_ASTEROIDS: number = NUMBER;
 const MAX_BULLETS: number = NUMBER;
 
@@ -188,6 +188,8 @@ const checkGameStatus = (): void => {
     } else if (bullets.length === MAX_BULLETS) {
         loseText.visible = true;
         stopAnimation(3000);
+    } else if (asteroids.length === 0) {
+        detectCollisionsWithBoss();
     }
 };
 
@@ -246,6 +248,40 @@ const resetGame = (): void => {
 };
 
 startGameTimer();
+
+const hitBoss = (): void => {
+    bossHP--;
+    bossHealthBar.clear();
+    bossHealthBar.beginFill(0xFF0000);
+    bossHealthBar.drawRect(0, 0, 100 * (bossHP / 4), 10);
+    bossHealthBar.endFill();
+
+    console.log(bossHP);
+
+    if (bossHP === 0) {
+        winText.text = 'YOU WIN';
+        winText.visible = true;
+        stopAnimation(0);
+    }
+};
+
+const detectCollisionsWithBoss = (): void => {
+    for (let i: number = bullets.length - 1; i >= 0; i--) {
+        const bullet: PIXI.Graphics = bullets[i];
+
+        if (bullet.x > boss.x - boss.width / 2 &&
+            bullet.x < boss.x + boss.width / 2 &&
+            bullet.y > boss.y - boss.height / 2 &&
+            bullet.y < boss.y + boss.height / 2) {
+
+            hitBoss();
+            console.log(1);
+
+            app.stage.removeChild(bullet);
+            bullets.splice(i, 1);
+        }
+    }
+};
 
 // Player Actions
 window.addEventListener("keydown", handlePlayerAction);
