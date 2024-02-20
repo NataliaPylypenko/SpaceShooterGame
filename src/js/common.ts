@@ -10,8 +10,8 @@ const app = new PIXI.Application<HTMLCanvasElement>({ width: appWidth, height: a
 document.body.appendChild(app.view);
 
 // Constants
-const GAME_TIME: number = 30;
-const NUMBER: number = 4;
+const GAME_TIME: number = 60;
+const NUMBER: number = 10;
 const MAX_ASTEROIDS: number = NUMBER;
 const MAX_BULLETS: number = NUMBER;
 
@@ -26,6 +26,8 @@ let levelTwoStarted = false;
 let boss: PIXI.Sprite;
 let bossHP: number = 4;
 let bossHealthBar: PIXI.Graphics;
+let bossSpeed: number = 2;
+let lastBossBulletTime: number = 0;
 
 // Create Elements And Add To Scene
 // Background
@@ -143,7 +145,7 @@ const createBoss = (): void => {
     boss = PIXI.Sprite.from('image/boss.png');
     boss.anchor.set(0.5);
     boss.x = appWidth / 2;
-    boss.y = 64;
+    boss.y = 120;
     app.stage.addChild(boss);
 
     bossHealthBar = new PIXI.Graphics();
@@ -151,8 +153,36 @@ const createBoss = (): void => {
     bossHealthBar.drawRect(0, 0, 100, 10);
     bossHealthBar.endFill();
     bossHealthBar.x = appWidth / 2 - 50;
-    bossHealthBar.y = 50;
+    bossHealthBar.y = 10;
     app.stage.addChild(bossHealthBar);
+};
+
+// BossBullet
+const createBossBullet = (): void => {
+    const bossBullet: PIXI.Graphics = new PIXI.Graphics();
+    bossBullet.beginFill(0xFF0000);
+    bossBullet.drawCircle(boss.x, boss.y, 20);
+    bossBullet.endFill();
+    app.stage.addChild(bossBullet);
+
+    const moveBossBullet = setInterval(() => {
+        bossBullet.y += 5;
+
+        if (bossBullet.y > appHeight) {
+            clearInterval(moveBossBullet);
+            app.stage.removeChild(bossBullet);
+        } else if (
+            bossBullet.x > player.x - player.width / 2 &&
+            bossBullet.x < player.x + player.width / 2 &&
+            bossBullet.y > player.y - player.height / 2 &&
+            bossBullet.y < player.y + player.height / 2
+        ) {
+            loseText.visible = true;
+            stopAnimation(3000);
+            clearInterval(moveBossBullet);
+            app.stage.removeChild(bossBullet);
+        }
+    }, 1000 / 60);
 };
 
 // Some Asteroids
@@ -210,6 +240,16 @@ const handlePlayerAction = (e: KeyboardEvent): void => {
     }
 };
 
+const moveBoss = (): void => {
+    if (boss) {
+        boss.x += bossSpeed;
+
+        if (boss.x < boss.width / 2 || boss.x > appWidth - boss.width / 2) {
+            bossSpeed *= -1;
+        }
+    }
+};
+
 const updateBullets = (): void => {
     bulletText.text = 'Bullets: ' + remainingBullets;
 };
@@ -230,6 +270,8 @@ const startGameTimer = (): void => {
     }, 1000);
 };
 
+startGameTimer();
+
 const resetGame = (): void => {
     asteroids.forEach(asteroid => app.stage.removeChild(asteroid));
 
@@ -247,16 +289,12 @@ const resetGame = (): void => {
     startGameTimer();
 };
 
-startGameTimer();
-
 const hitBoss = (): void => {
     bossHP--;
     bossHealthBar.clear();
     bossHealthBar.beginFill(0xFF0000);
     bossHealthBar.drawRect(0, 0, 100 * (bossHP / 4), 10);
     bossHealthBar.endFill();
-
-    console.log(bossHP);
 
     if (bossHP === 0) {
         winText.text = 'YOU WIN';
@@ -275,7 +313,6 @@ const detectCollisionsWithBoss = (): void => {
             bullet.y < boss.y + boss.height / 2) {
 
             hitBoss();
-            console.log(1);
 
             app.stage.removeChild(bullet);
             bullets.splice(i, 1);
@@ -290,6 +327,16 @@ window.addEventListener("keydown", handlePlayerAction);
 app.ticker.add(() => {
     detectCollisions();
     checkGameStatus();
+
+    if (boss) {
+        moveBoss();
+
+        const currentTime: number = Date.now();
+        if (currentTime - lastBossBulletTime >= 2000) {
+            createBossBullet();
+            lastBossBulletTime = currentTime;
+        }
+    }
 });
 
 // Start Level II
