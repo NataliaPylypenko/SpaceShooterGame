@@ -34,18 +34,20 @@ var app = new pixi_js__WEBPACK_IMPORTED_MODULE_1__.Application({ width: appWidth
 document.body.appendChild(app.view);
 // Constants
 var GAME_TIME = 60;
-var NUMBER = 4;
+var NUMBER = 10;
 var MAX_ASTEROIDS = NUMBER;
 var MAX_BULLETS = NUMBER;
+var SPEED_ASTEROIDS = 3;
+var SPEED_BULLETS = 5;
+var SPEED_PLAYER = 15;
 var bullets = [];
 var asteroids = [];
-var remainingBullets = MAX_BULLETS;
 var remainingTime = GAME_TIME;
 var gameTimer;
 var levelTwoStarted = false;
 var boss;
-var bossHP = 4;
 var bossHealthBar;
+var bossHP = 4;
 var bossSpeed = 2;
 var lastBossBulletTime = 0;
 // Create Elements And Add To Scene
@@ -62,26 +64,23 @@ player.y = appHeight - 64;
 app.stage.addChild(player);
 // Bullet
 var createBullet = function () {
-    if (remainingBullets > 0) {
-        remainingBullets--;
+    if (bullets.length < MAX_BULLETS) {
+        var bullet_1 = new pixi_js__WEBPACK_IMPORTED_MODULE_1__.Graphics();
+        bullet_1.beginFill(0x09DCDD);
+        bullet_1.drawCircle(0, 0, 9);
+        bullet_1.endFill();
+        bullet_1.x = player.x;
+        bullet_1.y = player.y;
+        app.stage.addChild(bullet_1);
+        bullets.push(bullet_1);
         updateBullets();
-        if (bullets.length < MAX_BULLETS) {
-            var bullet_1 = new pixi_js__WEBPACK_IMPORTED_MODULE_1__.Graphics();
-            bullet_1.beginFill(0xFFFFFF);
-            bullet_1.drawCircle(0, 0, 9);
-            bullet_1.endFill();
-            bullet_1.x = player.x;
-            bullet_1.y = player.y;
-            app.stage.addChild(bullet_1);
-            bullets.push(bullet_1);
-            var moveBullet_1 = setInterval(function () {
-                bullet_1.y -= 5;
-                if (bullet_1.y < 0) {
-                    app.stage.removeChild(bullet_1);
-                    clearInterval(moveBullet_1);
-                }
-            }, 1000 / 60);
-        }
+        var moveBullet_1 = setInterval(function () {
+            bullet_1.y -= SPEED_BULLETS;
+            if (bullet_1.y < 0) {
+                app.stage.removeChild(bullet_1);
+                clearInterval(moveBullet_1);
+            }
+        }, 1000 / 60);
     }
 };
 // Asteroid
@@ -95,7 +94,7 @@ var createAsteroid = function () {
     app.stage.addChild(asteroid);
     asteroids.push(asteroid);
     var moveAsteroid = setInterval(function () {
-        asteroid.y += 5;
+        asteroid.y += SPEED_ASTEROIDS;
         if (asteroid.y > appHeight) {
             app.stage.removeChild(asteroid);
             clearInterval(moveAsteroid);
@@ -127,7 +126,7 @@ loseText.y = appHeight / 2;
 app.stage.addChild(loseText);
 loseText.visible = false;
 // Shots
-var bulletText = new pixi_js__WEBPACK_IMPORTED_MODULE_1__.Text('Bullets: ' + remainingBullets, {
+var bulletText = new pixi_js__WEBPACK_IMPORTED_MODULE_1__.Text('Bullets: ' + MAX_BULLETS, {
     fontFamily: 'Arial',
     fontSize: 24,
     fill: 0xFFFFFF,
@@ -164,12 +163,12 @@ var createBoss = function () {
 // BossBullet
 var createBossBullet = function () {
     var bossBullet = new pixi_js__WEBPACK_IMPORTED_MODULE_1__.Graphics();
-    bossBullet.beginFill(0xFF0000);
+    bossBullet.beginFill(0x05CDFF);
     bossBullet.drawCircle(boss.x, boss.y, 20);
     bossBullet.endFill();
     app.stage.addChild(bossBullet);
     var moveBossBullet = setInterval(function () {
-        bossBullet.y += 5;
+        bossBullet.y += SPEED_BULLETS;
         if (bossBullet.y > appHeight) {
             clearInterval(moveBossBullet);
             app.stage.removeChild(bossBullet);
@@ -179,9 +178,9 @@ var createBossBullet = function () {
             bossBullet.y > player.y - player.height / 2 &&
             bossBullet.y < player.y + player.height / 2) {
             loseText.visible = true;
-            stopAnimation(3000);
             clearInterval(moveBossBullet);
             app.stage.removeChild(bossBullet);
+            app.ticker.stop();
         }
     }, 1000 / 60);
 };
@@ -200,7 +199,6 @@ var detectCollisions = function () {
                 bullet.y < asteroid.y + asteroid.height / 2) {
                 app.stage.removeChild(bullet);
                 app.stage.removeChild(asteroid);
-                bullets.splice(i, 1);
                 asteroids.splice(j, 1);
             }
         }
@@ -213,8 +211,12 @@ var checkGameStatus = function () {
         startLevelTwo();
     }
     else if (bullets.length === MAX_BULLETS) {
-        loseText.visible = true;
-        stopAnimation(3000);
+        var lastBullet = bullets[MAX_BULLETS - 1];
+        if (lastBullet.y < 0) {
+            loseText.visible = true;
+            clearInterval(gameTimer);
+            app.ticker.stop();
+        }
     }
     else if (asteroids.length === 0) {
         detectCollisionsWithBoss();
@@ -228,10 +230,10 @@ var stopAnimation = function (time) {
 };
 var handlePlayerAction = function (e) {
     if (e.key == "ArrowLeft" && player.x - player.width / 2 > 0) {
-        player.x -= 10;
+        player.x -= SPEED_PLAYER;
     }
     else if (e.key == "ArrowRight" && player.x < appWidth - player.width / 2) {
-        player.x += 10;
+        player.x += SPEED_PLAYER;
     }
     else if (e.key == " ") {
         createBullet();
@@ -246,7 +248,7 @@ var moveBoss = function () {
     }
 };
 var updateBullets = function () {
-    bulletText.text = 'Bullets: ' + remainingBullets;
+    bulletText.text = 'Bullets: ' + (MAX_BULLETS - bullets.length);
 };
 var updateTimer = function () {
     timerText.text = 'Time: ' + remainingTime;
@@ -264,9 +266,9 @@ var startGameTimer = function () {
 startGameTimer();
 var resetGame = function () {
     asteroids.forEach(function (asteroid) { return app.stage.removeChild(asteroid); });
-    remainingBullets = MAX_BULLETS;
+    bullets = [];
     remainingTime = GAME_TIME;
-    bulletText.text = 'Bullets: ' + remainingBullets;
+    bulletText.text = 'Bullets: ' + MAX_BULLETS;
     timerText.text = 'Time: ' + remainingTime;
     player.x = appWidth / 2;
     player.y = appHeight - 64;
