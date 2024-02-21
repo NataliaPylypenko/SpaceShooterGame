@@ -20,7 +20,6 @@ const SPEED_PLAYER: number = 15;
 
 let bullets: PIXI.Graphics[] = [];
 let asteroids: PIXI.Graphics[] = [];
-let remainingBullets: number = MAX_BULLETS;
 let remainingTime: number = GAME_TIME;
 
 let gameTimer: NodeJS.Timeout;
@@ -48,29 +47,25 @@ app.stage.addChild(player);
 
 // Bullet
 const createBullet = (): void => {
-    if (remainingBullets > 0) {
-        remainingBullets--;
+    if (bullets.length < MAX_BULLETS) {
+        const bullet: PIXI.Graphics = new PIXI.Graphics();
+        bullet.beginFill(0x09DCDD);
+        bullet.drawCircle(0, 0, 9);
+        bullet.endFill();
+        bullet.x = player.x;
+        bullet.y = player.y;
+        app.stage.addChild(bullet);
+        bullets.push(bullet);
         updateBullets();
 
-        if (bullets.length < MAX_BULLETS) {
-            const bullet: PIXI.Graphics = new PIXI.Graphics();
-            bullet.beginFill(0x09DCDD);
-            bullet.drawCircle(0, 0, 9);
-            bullet.endFill();
-            bullet.x = player.x;
-            bullet.y = player.y;
-            app.stage.addChild(bullet);
-            bullets.push(bullet);
+        const moveBullet = setInterval(() => {
+            bullet.y -= SPEED_BULLETS;
 
-            const moveBullet = setInterval(() => {
-                bullet.y -= SPEED_BULLETS;
-
-                if (bullet.y < 0) {
-                    app.stage.removeChild(bullet);
-                    clearInterval(moveBullet);
-                }
-            }, 1000 / 60);
-        }
+            if (bullet.y < 0) {
+                app.stage.removeChild(bullet);
+                clearInterval(moveBullet);
+            }
+        }, 1000 / 60);
     }
 };
 
@@ -122,7 +117,7 @@ app.stage.addChild(loseText);
 loseText.visible = false;
 
 // Shots
-const bulletText: PIXI.Text = new PIXI.Text('Bullets: ' + remainingBullets, {
+const bulletText: PIXI.Text = new PIXI.Text('Bullets: ' + MAX_BULLETS, {
     fontFamily: 'Arial',
     fontSize: 24,
     fill: 0xFFFFFF,
@@ -181,9 +176,9 @@ const createBossBullet = (): void => {
             bossBullet.y < player.y + player.height / 2
         ) {
             loseText.visible = true;
-            stopAnimation(3000);
             clearInterval(moveBossBullet);
             app.stage.removeChild(bossBullet);
+            app.ticker.stop();
         }
     }, 1000 / 60);
 };
@@ -199,14 +194,14 @@ const detectCollisions = (): void => {
         for (let j: number = asteroids.length - 1; j >= 0; j--) {
             const asteroid: PIXI.Graphics = asteroids[j];
 
-            if (bullet.x > asteroid.x - asteroid.width / 2 &&
+            if (
+                bullet.x > asteroid.x - asteroid.width / 2 &&
                 bullet.x < asteroid.x + asteroid.width / 2 &&
                 bullet.y > asteroid.y - asteroid.height / 2 &&
-                bullet.y < asteroid.y + asteroid.height / 2) {
-
+                bullet.y < asteroid.y + asteroid.height / 2
+            ) {
                 app.stage.removeChild(bullet);
                 app.stage.removeChild(asteroid);
-                bullets.splice(i, 1);
                 asteroids.splice(j, 1);
             }
         }
@@ -219,8 +214,12 @@ const checkGameStatus = (): void => {
         levelTwoStarted = true;
         startLevelTwo();
     } else if (bullets.length === MAX_BULLETS) {
-        loseText.visible = true;
-        stopAnimation(3000);
+        let lastBullet = bullets[MAX_BULLETS - 1];
+        if (lastBullet.y < 0) {
+            loseText.visible = true;
+            clearInterval(gameTimer);
+            app.ticker.stop();
+        }
     } else if (asteroids.length === 0) {
         detectCollisionsWithBoss();
     }
@@ -254,7 +253,7 @@ const moveBoss = (): void => {
 };
 
 const updateBullets = (): void => {
-    bulletText.text = 'Bullets: ' + remainingBullets;
+    bulletText.text = 'Bullets: ' + (MAX_BULLETS - bullets.length);
 };
 
 const updateTimer = (): void => {
@@ -277,10 +276,10 @@ startGameTimer();
 
 const resetGame = (): void => {
     asteroids.forEach(asteroid => app.stage.removeChild(asteroid));
+    bullets = [];
 
-    remainingBullets = MAX_BULLETS;
     remainingTime = GAME_TIME;
-    bulletText.text = 'Bullets: ' + remainingBullets;
+    bulletText.text = 'Bullets: ' + MAX_BULLETS;
     timerText.text = 'Time: ' + remainingTime;
 
     player.x = appWidth / 2;
