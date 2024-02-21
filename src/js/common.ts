@@ -14,6 +14,9 @@ const GAME_TIME: number = 60;
 const NUMBER: number = 10;
 const MAX_ASTEROIDS: number = NUMBER;
 const MAX_BULLETS: number = NUMBER;
+const SPEED_ASTEROIDS: number = 3;
+const SPEED_BULLETS: number = 5;
+const SPEED_PLAYER: number = 15;
 
 let bullets: PIXI.Graphics[] = [];
 let asteroids: PIXI.Graphics[] = [];
@@ -24,8 +27,8 @@ let gameTimer: NodeJS.Timeout;
 let levelTwoStarted = false;
 
 let boss: PIXI.Sprite;
-let bossHP: number = 4;
 let bossHealthBar: PIXI.Graphics;
+let bossHP: number = 4;
 let bossSpeed: number = 2;
 let lastBossBulletTime: number = 0;
 
@@ -60,7 +63,7 @@ const createBullet = (): void => {
             bullets.push(bullet);
 
             const moveBullet = setInterval(() => {
-                bullet.y -= 5;
+                bullet.y -= SPEED_BULLETS;
 
                 if (bullet.y < 0) {
                     app.stage.removeChild(bullet);
@@ -83,7 +86,7 @@ const createAsteroid = (): void => {
     asteroids.push(asteroid);
 
     const moveAsteroid = setInterval(() => {
-        asteroid.y += 5;
+        asteroid.y += SPEED_ASTEROIDS;
 
         if (asteroid.y > appHeight) {
             app.stage.removeChild(asteroid);
@@ -166,7 +169,7 @@ const createBossBullet = (): void => {
     app.stage.addChild(bossBullet);
 
     const moveBossBullet = setInterval(() => {
-        bossBullet.y += 5;
+        bossBullet.y += SPEED_BULLETS;
 
         if (bossBullet.y > appHeight) {
             clearInterval(moveBossBullet);
@@ -232,9 +235,9 @@ const stopAnimation = (time: number) => {
 
 const handlePlayerAction = (e: KeyboardEvent): void => {
     if (e.key == "ArrowLeft" && player.x - player.width / 2 > 0) {
-        player.x -= 10;
+        player.x -= SPEED_PLAYER;
     } else if (e.key == "ArrowRight" && player.x < appWidth - player.width / 2) {
-        player.x += 10;
+        player.x += SPEED_PLAYER;
     } else if (e.key == " ") {
         createBullet();
     }
