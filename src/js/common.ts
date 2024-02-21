@@ -54,7 +54,7 @@ const createBullet = (): void => {
 
         if (bullets.length < MAX_BULLETS) {
             const bullet: PIXI.Graphics = new PIXI.Graphics();
-            bullet.beginFill(0xFFFFFF);
+            bullet.beginFill(0x09DCDD);
             bullet.drawCircle(0, 0, 9);
             bullet.endFill();
             bullet.x = player.x;
@@ -163,7 +163,7 @@ const createBoss = (): void => {
 // BossBullet
 const createBossBullet = (): void => {
     const bossBullet: PIXI.Graphics = new PIXI.Graphics();
-    bossBullet.beginFill(0xFF0000);
+    bossBullet.beginFill(0x05CDFF);
     bossBullet.drawCircle(boss.x, boss.y, 20);
     bossBullet.endFill();
     app.stage.addChild(bossBullet);
