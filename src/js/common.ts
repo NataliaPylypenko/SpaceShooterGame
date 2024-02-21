@@ -12,7 +12,7 @@ document.body.appendChild(app.view);
 // Constants
 const GAME_TIME: number = 60;
 const NUMBER: number = 10;
-const MAX_ASTEROIDS: number = NUMBER;
+const MAX_ASTEROIDS: number = 1;
 const MAX_BULLETS: number = NUMBER;
 const SPEED_ASTEROIDS: number = 3;
 const SPEED_BULLETS: number = 5;
@@ -55,6 +55,7 @@ const createBullet = (): void => {
         bullet.x = player.x;
         bullet.y = player.y;
         app.stage.addChild(bullet);
+
         bullets.push(bullet);
         updateBullets();
 
@@ -220,8 +221,6 @@ const checkGameStatus = (): void => {
             clearInterval(gameTimer);
             app.ticker.stop();
         }
-    } else if (asteroids.length === 0) {
-        detectCollisionsWithBoss();
     }
 };
 
@@ -277,8 +276,8 @@ startGameTimer();
 const resetGame = (): void => {
     asteroids.forEach(asteroid => app.stage.removeChild(asteroid));
     bullets = [];
-
     remainingTime = GAME_TIME;
+
     bulletText.text = 'Bullets: ' + MAX_BULLETS;
     timerText.text = 'Time: ' + remainingTime;
 
@@ -316,8 +315,11 @@ const detectCollisionsWithBoss = (): void => {
 
             hitBoss();
 
+            bullet.x = 0;
+            bullet.y = 0;
+
             app.stage.removeChild(bullet);
-            bullets.splice(i, 1);
+            return;
         }
     }
 };
@@ -332,6 +334,7 @@ app.ticker.add(() => {
 
     if (boss) {
         moveBoss();
+        detectCollisionsWithBoss();
 
         const currentTime: number = Date.now();
         if (currentTime - lastBossBulletTime >= 2000) {
