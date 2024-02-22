@@ -164,8 +164,10 @@ var createBoss = function () {
 var createBossBullet = function () {
     var bossBullet = new pixi_js__WEBPACK_IMPORTED_MODULE_1__.Graphics();
     bossBullet.beginFill(0x05CDFF);
-    bossBullet.drawCircle(boss.x, boss.y, 20);
+    bossBullet.drawCircle(0, 0, 20);
     bossBullet.endFill();
+    bossBullet.x = boss.x;
+    bossBullet.y = boss.y;
     app.stage.addChild(bossBullet);
     var moveBossBullet = setInterval(function () {
         bossBullet.y += SPEED_BULLETS;
@@ -178,9 +180,11 @@ var createBossBullet = function () {
             bossBullet.y > player.y - player.height / 2 &&
             bossBullet.y < player.y + player.height / 2) {
             loseText.visible = true;
-            clearInterval(moveBossBullet);
             app.stage.removeChild(bossBullet);
-            app.ticker.stop();
+            setTimeout(function () {
+                clearInterval(moveBossBullet);
+                app.ticker.stop();
+            }, 0);
         }
     }, 1000 / 60);
 };
@@ -217,9 +221,6 @@ var checkGameStatus = function () {
             clearInterval(gameTimer);
             app.ticker.stop();
         }
-    }
-    else if (asteroids.length === 0) {
-        detectCollisionsWithBoss();
     }
 };
 var stopAnimation = function (time) {
@@ -296,8 +297,10 @@ var detectCollisionsWithBoss = function () {
             bullet.y > boss.y - boss.height / 2 &&
             bullet.y < boss.y + boss.height / 2) {
             hitBoss();
+            bullet.x = 0;
+            bullet.y = 0;
             app.stage.removeChild(bullet);
-            bullets.splice(i, 1);
+            return;
         }
     }
 };
@@ -309,6 +312,7 @@ app.ticker.add(function () {
     checkGameStatus();
     if (boss) {
         moveBoss();
+        detectCollisionsWithBoss();
         var currentTime = Date.now();
         if (currentTime - lastBossBulletTime >= 2000) {
             createBossBullet();
