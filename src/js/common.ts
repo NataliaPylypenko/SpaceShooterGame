@@ -12,7 +12,7 @@ document.body.appendChild(app.view);
 // Constants
 const GAME_TIME: number = 60;
 const NUMBER: number = 10;
-const MAX_ASTEROIDS: number = 1;
+const MAX_ASTEROIDS: number = NUMBER;
 const MAX_BULLETS: number = NUMBER;
 const SPEED_ASTEROIDS: number = 3;
 const SPEED_BULLETS: number = 5;
@@ -160,8 +160,10 @@ const createBoss = (): void => {
 const createBossBullet = (): void => {
     const bossBullet: PIXI.Graphics = new PIXI.Graphics();
     bossBullet.beginFill(0x05CDFF);
-    bossBullet.drawCircle(boss.x, boss.y, 20);
+    bossBullet.drawCircle(0, 0, 20);
     bossBullet.endFill();
+    bossBullet.x = boss.x;
+    bossBullet.y = boss.y;
     app.stage.addChild(bossBullet);
 
     const moveBossBullet = setInterval(() => {
@@ -177,9 +179,11 @@ const createBossBullet = (): void => {
             bossBullet.y < player.y + player.height / 2
         ) {
             loseText.visible = true;
-            clearInterval(moveBossBullet);
             app.stage.removeChild(bossBullet);
-            app.ticker.stop();
+            setTimeout(() => {
+                clearInterval(moveBossBullet);
+                app.ticker.stop();
+            }, 0);
         }
     }, 1000 / 60);
 };
