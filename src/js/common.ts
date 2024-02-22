@@ -12,7 +12,7 @@ document.body.appendChild(app.view);
 // Constants
 const GAME_TIME: number = 60;
 const NUMBER: number = 10;
-const MAX_ASTEROIDS: number = NUMBER;
+const MAX_ASTEROIDS: number = 20;
 const MAX_BULLETS: number = NUMBER;
 const SPEED_ASTEROIDS: number = 3;
 const SPEED_BULLETS: number = 5;
@@ -27,6 +27,7 @@ let levelTwoStarted = false;
 
 let boss: PIXI.Sprite;
 let bossHealthBar: PIXI.Graphics;
+let bossBullets: PIXI.Graphics[] = [];
 let bossHP: number = 4;
 let bossSpeed: number = 2;
 let lastBossBulletTime: number = 0;
@@ -57,6 +58,7 @@ const createBullet = (): void => {
         app.stage.addChild(bullet);
 
         bullets.push(bullet);
+
         updateBullets();
 
         const moveBullet = setInterval(() => {
@@ -76,9 +78,10 @@ const createAsteroid = (): void => {
     asteroid.beginFill(0xCCCCCC);
     asteroid.drawCircle(0, 0, 30);
     asteroid.endFill();
-    asteroid.x = Math.random() * appWidth;
+    asteroid.x = Math.random() * (appWidth - asteroid.width) + asteroid.width / 2;
     asteroid.y = Math.random() * appHeight - appHeight;
     app.stage.addChild(asteroid);
+
     asteroids.push(asteroid);
 
     const moveAsteroid = setInterval(() => {
@@ -166,6 +169,8 @@ const createBossBullet = (): void => {
     bossBullet.y = boss.y;
     app.stage.addChild(bossBullet);
 
+    bossBullets.push(bossBullet);
+
     const moveBossBullet = setInterval(() => {
         bossBullet.y += SPEED_BULLETS;
 
@@ -193,7 +198,7 @@ for (let i: number = 0; i < MAX_ASTEROIDS; i++) {
     createAsteroid();
 }
 
-const detectCollisions = (): void => {
+const detectCollisionsWithAsteroid = (): void => {
     for (let i: number = bullets.length - 1; i >= 0; i--) {
         const bullet: PIXI.Graphics = bullets[i];
         for (let j: number = asteroids.length - 1; j >= 0; j--) {
@@ -207,7 +212,35 @@ const detectCollisions = (): void => {
             ) {
                 app.stage.removeChild(bullet);
                 app.stage.removeChild(asteroid);
+
+                bullet.x = 0;
+                bullet.y = 0;
+
                 asteroids.splice(j, 1);
+            }
+        }
+    }
+};
+
+const detectCollisionsWithBossBullet = (): void => {
+    for (let i: number = bullets.length - 1; i >= 0; i--) {
+        const bullet: PIXI.Graphics = bullets[i];
+        for (let j: number = bossBullets.length - 1; j >= 0; j--) {
+            const bossBullet: PIXI.Graphics = bossBullets[j];
+
+            if (
+                bullet.x > bossBullet.x - bossBullet.width / 2 &&
+                bullet.x < bossBullet.x + bossBullet.width / 2 &&
+                bullet.y > bossBullet.y - bossBullet.height / 2 &&
+                bullet.y < bossBullet.y + bossBullet.height / 2
+            ) {
+                app.stage.removeChild(bullet);
+                app.stage.removeChild(bossBullet);
+
+                bossBullet.x = 0;
+                bossBullet.y = 0;
+
+                bossBullets.splice(j, 1);
             }
         }
     }
@@ -333,12 +366,13 @@ window.addEventListener("keydown", handlePlayerAction);
 
 // Start Level I
 app.ticker.add(() => {
-    detectCollisions();
+    detectCollisionsWithAsteroid();
     checkGameStatus();
 
     if (boss) {
         moveBoss();
         detectCollisionsWithBoss();
+        detectCollisionsWithBossBullet();
 
         const currentTime: number = Date.now();
         if (currentTime - lastBossBulletTime >= 2000) {
