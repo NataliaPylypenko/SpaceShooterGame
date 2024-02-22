@@ -12,13 +12,14 @@ document.body.appendChild(app.view);
 // Constants
 const GAME_TIME: number = 60;
 const NUMBER: number = 10;
-const MAX_ASTEROIDS: number = NUMBER;
+const MAX_ASTEROIDS: number = 2;
 const MAX_BULLETS: number = NUMBER;
 const SPEED_ASTEROIDS: number = 3;
 const SPEED_BULLETS: number = 5;
 const SPEED_PLAYER: number = 15;
 
-let bullets: PIXI.Graphics[] = [];
+let playerBullets: PIXI.Graphics[] = [];
+const playerBulletsOnStage: PIXI.Graphics[] = [];
 let asteroids: PIXI.Graphics[] = [];
 let remainingTime: number = GAME_TIME;
 
@@ -27,7 +28,7 @@ let levelTwoStarted = false;
 
 let boss: PIXI.Sprite;
 let bossHealthBar: PIXI.Graphics;
-let bossBullets: PIXI.Graphics[] = [];
+const bossBulletsOnStage: PIXI.Graphics[] = [];
 let bossHP: number = 4;
 let bossSpeed: number = 2;
 let lastBossBulletTime: number = 0;
@@ -96,20 +97,17 @@ app.stage.addChild(timerText);
 
 
 // Bullet
-const createBullet = (): PIXI.Graphics => {
+const createPlayerBullet = (): PIXI.Graphics => {
     const bullet: PIXI.Graphics = new PIXI.Graphics();
     bullet.beginFill(0x09DCDD);
     bullet.drawCircle(0, 0, 9);
     bullet.endFill();
-    bullet.x = player.x;
-    bullet.y = player.y;
-    app.stage.addChild(bullet);
 
     return bullet;
 };
 
 // Asteroid
-const createAsteroid = (): void => {
+const createAndMoveAsteroid = (): void => {
     const asteroid: PIXI.Graphics = new PIXI.Graphics();
     asteroid.beginFill(0xCCCCCC);
     asteroid.drawCircle(0, 0, 30);
@@ -157,147 +155,111 @@ const createBossBullet = (): PIXI.Graphics => {
     bossBullet.endFill();
     bossBullet.x = boss.x;
     bossBullet.y = boss.y;
-    app.stage.addChild(bossBullet);
 
     return bossBullet;
 };
 
-// Some Asteroids
-for (let i: number = 0; i < MAX_ASTEROIDS; i++) {
-    createAsteroid();
-}
-
 const shootOutPlayer = (): void => {
-    if (bullets.length < MAX_BULLETS) {
-        let bullet = createBullet();
-        bullets.push(bullet);
-
-        updateBullets();
-
-        const moveBullet = setInterval(() => {
-            bullet.y -= SPEED_BULLETS;
-
-            if (bullet.y < 0) {
-                app.stage.removeChild(bullet);
-                clearInterval(moveBullet);
-            }
-        }, 1000 / 60);
+    if(!playerBullets.length){
+        return;
     }
+    const bullet = playerBullets.pop();
+
+    bullet.x = player.x;
+    bullet.y = player.y;
+    app.stage.addChild(bullet);
+
+    playerBulletsOnStage.push(bullet);
+    updateBulletsText();
+
+    const moveBullet = setInterval(async () => {
+        bullet.y -= SPEED_BULLETS;
+
+        if (playerBullets.length === 0) {
+            if (bullet.y < 0) {
+                loseText.visible = true;
+                stopAnimation('gameTimer', 250);
+            }
+        }
+
+        if (bullet.y < 0) {
+            app.stage.removeChild(bullet);
+            playerBulletsOnStage.pop();
+            clearInterval(moveBullet);
+        }
+
+    }, 1000 / 60);
 };
 
 const shootOutBoss = (): void => {
-    let bossBullet = createBossBullet();
-    bossBullets.push(bossBullet);
+    const bossBullet = createBossBullet();
+    app.stage.addChild(bossBullet);
+    bossBulletsOnStage.push(bossBullet);
 
     const moveBossBullet = setInterval(() => {
         bossBullet.y += SPEED_BULLETS;
-
         if (bossBullet.y > appHeight) {
             clearInterval(moveBossBullet);
             app.stage.removeChild(bossBullet);
+            bossBulletsOnStage.pop()
         }
     }, 1000 / 60);
 };
 const detectCollisionsWithAsteroid = (): void => {
-    for (let i: number = bullets.length - 1; i >= 0; i--) {
-        const bullet: PIXI.Graphics = bullets[i];
-
-        for (let j: number = asteroids.length - 1; j >= 0; j--) {
-            const asteroid: PIXI.Graphics = asteroids[j];
-
-            if (
-                bullet.x > asteroid.x - asteroid.width / 2 &&
-                bullet.x < asteroid.x + asteroid.width / 2 &&
-                bullet.y > asteroid.y - asteroid.height / 2 &&
-                bullet.y < asteroid.y + asteroid.height / 2
-            ) {
-                bullet.x = 0;
-                bullet.y = 0;
-
-                asteroids.splice(j, 1);
-
-                app.stage.removeChild(bullet);
-                app.stage.removeChild(asteroid);
-            }
-        }
-    }
-};
-
-const detectCollisionsWithBullets = (): void => {
-    for (let i: number = bullets.length - 1; i >= 0; i--) {
-        const bullet: PIXI.Graphics = bullets[i];
-
-        for (let j: number = bossBullets.length - 1; j >= 0; j--) {
-            const bossBullet: PIXI.Graphics = bossBullets[j];
-
-            if (
-                bullet.x > bossBullet.x - bossBullet.width / 2 &&
-                bullet.x < bossBullet.x + bossBullet.width / 2 &&
-                bullet.y > bossBullet.y - bossBullet.height / 2 &&
-                bullet.y < bossBullet.y + bossBullet.height / 2
-            ) {
-                bossBullet.x = 0;
-                bossBullet.y = 0;
-
-                bossBullets.splice(j, 1);
-
-                app.stage.removeChild(bullet);
-                app.stage.removeChild(bossBullet);
-            }
-        }
-    }
+    asteroids.forEach((asteroid: PIXI.Graphics, ai: number): void => {
+        _detectCollisionsWithObjects(playerBulletsOnStage, asteroid, (bulletIdx: number): void => {
+            app.stage.removeChild(playerBulletsOnStage[bulletIdx]);
+            app.stage.removeChild(asteroid);
+            asteroids.splice(ai, 1);
+            playerBulletsOnStage.splice(bulletIdx, 1);
+        })
+    })
 };
 
 const detectCollisionsWithBoss = (): void => {
-    for (let i: number = bullets.length - 1; i >= 0; i--) {
-        const bullet: PIXI.Graphics = bullets[i];
-
-        if (bullet.x > boss.x - boss.width / 2 &&
-            bullet.x < boss.x + boss.width / 2 &&
-            bullet.y > boss.y - boss.height / 2 &&
-            bullet.y < boss.y + boss.height / 2) {
-
-            hitBoss();
-
-            bullet.x = 0;
-            bullet.y = 0;
-
-            app.stage.removeChild(bullet);
-        }
-    }
+    console.log('shoot')
+    _detectCollisionsWithObjects(playerBulletsOnStage, boss, (bulletIdx: number): void => {
+        hitBoss();
+        app.stage.removeChild(playerBulletsOnStage[bulletIdx]);
+        playerBulletsOnStage.splice(bulletIdx, 1);
+    })
 };
 
 const detectCollisionsWithPlayer = (): void => {
-    for (let i: number = bossBullets.length - 1; i >= 0; i--) {
-        const bossBullet: PIXI.Graphics = bossBullets[i];
-        if (bossBullet.x > player.x - player.width / 2 &&
-            bossBullet.x < player.x + player.width / 2 &&
-            bossBullet.y > player.y - player.height / 2 &&
-            bossBullet.y < player.y + player.height / 2) {
-
-            loseText.visible = true;
-            app.stage.removeChild(bossBullet);
-            stopAnimation('moveBossBullet', 200);
-
-            bossBullets.splice(i, 1);
-            app.stage.removeChild(bossBullet);
-        }
-    }
+    _detectCollisionsWithObjects(bossBulletsOnStage, player, () => {
+        loseText.visible = true;
+        stopAnimation('moveBossBullet', 200);
+    })
 };
 
-const checkGameStatus = (): void => {
-    if (asteroids.length === 0 && !levelTwoStarted) {
-        clearInterval(gameTimer);
-        levelTwoStarted = true;
-        startLevelTwo();
-    } else if (bullets.length === MAX_BULLETS) {
-        let lastBullet = bullets[MAX_BULLETS - 1];
-        if (lastBullet.y < 0) {
-            loseText.visible = true;
-            clearInterval(gameTimer);
-            app.ticker.stop();
+const detectCollisionsWithBullets = (): void => {
+    playerBulletsOnStage.forEach((playerBullet: PIXI.Graphics, pbi: number): void => {
+        bossBulletsOnStage.forEach((bossBullet: PIXI.Graphics, bbi: number): void => {
+            if (
+                playerBullet.x > bossBullet.x - bossBullet.width / 2 &&
+                playerBullet.x < bossBullet.x + bossBullet.width / 2 &&
+                playerBullet.y > bossBullet.y - bossBullet.height / 2 &&
+                playerBullet.y < bossBullet.y + bossBullet.height / 2
+            ) {
+                bossBulletsOnStage.splice(bbi, 1);
+                playerBulletsOnStage.splice(pbi, 1);
+
+                app.stage.removeChild(playerBullet);
+                app.stage.removeChild(bossBullet);
+            }
+        })
+    })
+};
+
+const _detectCollisionsWithObjects = (bullets: PIXI.Graphics[], goalObject: PIXI.Container, callback: Function): void => {
+    bullets.forEach((bullet: PIXI.Graphics, index: number): void => {
+        if (bullet.x > goalObject.x - goalObject.width / 2 &&
+            bullet.x < goalObject.x + goalObject.width / 2 &&
+            bullet.y > goalObject.y - goalObject.height / 2 &&
+            bullet.y < goalObject.y + goalObject.height / 2) {
+            callback(index);
         }
-    }
+    })
 };
 
 const handlePlayerAction = (e: KeyboardEvent): void => {
@@ -318,43 +280,24 @@ const moveBoss = (): void => {
     }
 };
 
-const updateBullets = (): void => {
-    bulletText.text = 'Bullets: ' + (MAX_BULLETS - bullets.length);
+const updateBulletsText = (): void => {
+    bulletText.text = 'Bullets: ' + playerBullets.length;
 };
 
-const updateTimer = (): void => {
+const updateTimerText = (): void => {
     timerText.text = 'Time: ' + remainingTime;
 };
 
 const startGameTimer = (): void => {
     gameTimer = setInterval(() => {
         remainingTime--;
-        updateTimer();
+        updateTimerText();
 
         if (remainingTime <= 0) {
             loseText.visible = true;
-            stopAnimation('gameTimer', 500)
+            stopAnimation('gameTimer', 250)
         }
     }, 1000);
-};
-
-startGameTimer();
-
-const resetGame = (): void => {
-    asteroids.forEach(asteroid => app.stage.removeChild(asteroid));
-    bullets = [];
-    remainingTime = GAME_TIME;
-
-    bulletText.text = 'Bullets: ' + MAX_BULLETS;
-    timerText.text = 'Time: ' + remainingTime;
-
-    player.x = appWidth / 2;
-    player.y = appHeight - 64;
-
-    winText.visible = false;
-    loseText.visible = false;
-
-    startGameTimer();
 };
 
 const hitBoss = (): void => {
@@ -367,7 +310,7 @@ const hitBoss = (): void => {
     if (bossHP === 0) {
         winText.text = 'YOU WIN';
         winText.visible = true;
-        stopAnimation('gameTimer', 0);
+        stopAnimation('gameTimer', 250);
     }
 };
 
@@ -381,7 +324,31 @@ const stopAnimation = (nameTimeout: string, time: number) => {
 // Player Actions
 window.addEventListener("keydown", handlePlayerAction);
 
-// Start Level I
+const checkGameStatus = (): void => {
+    if (asteroids.length === 0 && !levelTwoStarted) {
+        clearInterval(gameTimer);
+        levelTwoStarted = true;
+        startLevelTwo();
+    }
+};
+
+const resetGame = (): void => {
+    playerBullets = new Array(MAX_BULLETS).fill(createPlayerBullet());
+
+    remainingTime = GAME_TIME;
+    bulletText.text = 'Bullets: ' + MAX_BULLETS;
+    timerText.text = 'Time: ' + remainingTime;
+
+    player.x = appWidth / 2;
+    player.y = appHeight - 64;
+
+    winText.visible = false;
+    loseText.visible = false;
+
+    startGameTimer();
+};
+
+// Start Animation
 app.ticker.add(() => {
     detectCollisionsWithAsteroid();
     checkGameStatus();
@@ -400,9 +367,19 @@ app.ticker.add(() => {
     }
 });
 
+// Start Level I
+const startLevelOne = (): void => {
+    resetGame();
+    for (let i: number = 0; i < MAX_ASTEROIDS; i++) {
+        createAndMoveAsteroid();
+    }
+};
+
 // Start Level II
 const startLevelTwo = (): void => {
     resetGame();
     createBoss();
     createBossHealthBar();
 };
+
+startLevelOne();
