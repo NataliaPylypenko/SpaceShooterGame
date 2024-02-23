@@ -24,6 +24,42 @@ __webpack_require__.r(__webpack_exports__);
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _scss_style_scss__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../scss/style.scss */ "./src/scss/style.scss");
 /* harmony import */ var pixi_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! pixi.js */ "./node_modules/pixi.js/lib/index.mjs");
+var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __generator = (undefined && undefined.__generator) || function (thisArg, body) {
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    function verb(n) { return function (v) { return step([n, v]); }; }
+    function step(op) {
+        if (f) throw new TypeError("Generator is already executing.");
+        while (g && (g = 0, op[0] && (_ = 0)), _) try {
+            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [op[0] & 2, t.value];
+            switch (op[0]) {
+                case 0: case 1: t = op; break;
+                case 4: _.label++; return { value: op[1], done: false };
+                case 5: _.label++; y = op[1]; op = [0]; continue;
+                case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                default:
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                    if (t[2]) _.ops.pop();
+                    _.trys.pop(); continue;
+            }
+            op = body.call(thisArg, _);
+        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+    }
+};
 // SCSS
 
 
@@ -40,14 +76,15 @@ var MAX_BULLETS = NUMBER;
 var SPEED_ASTEROIDS = 3;
 var SPEED_BULLETS = 5;
 var SPEED_PLAYER = 15;
-var bullets = [];
+var playerBullets = [];
+var playerBulletsOnStage = [];
 var asteroids = [];
 var remainingTime = GAME_TIME;
 var gameTimer;
 var levelTwoStarted = false;
 var boss;
 var bossHealthBar;
-var bossBullets = [];
+var bossBulletsOnStage = [];
 var bossHP = 4;
 var bossSpeed = 2;
 var lastBossBulletTime = 0;
@@ -108,18 +145,15 @@ timerText.x = appWidth - 10;
 timerText.y = 10;
 app.stage.addChild(timerText);
 // Bullet
-var createBullet = function () {
+var createPlayerBullet = function () {
     var bullet = new pixi_js__WEBPACK_IMPORTED_MODULE_1__.Graphics();
     bullet.beginFill(0x09DCDD);
     bullet.drawCircle(0, 0, 9);
     bullet.endFill();
-    bullet.x = player.x;
-    bullet.y = player.y;
-    app.stage.addChild(bullet);
     return bullet;
 };
 // Asteroid
-var createAsteroid = function () {
+var createAndMoveAsteroid = function () {
     var asteroid = new pixi_js__WEBPACK_IMPORTED_MODULE_1__.Graphics();
     asteroid.beginFill(0xCCCCCC);
     asteroid.drawCircle(0, 0, 30);
@@ -161,117 +195,97 @@ var createBossBullet = function () {
     bossBullet.endFill();
     bossBullet.x = boss.x;
     bossBullet.y = boss.y;
-    app.stage.addChild(bossBullet);
     return bossBullet;
 };
-// Some Asteroids
-for (var i = 0; i < MAX_ASTEROIDS; i++) {
-    createAsteroid();
-}
 var shootOutPlayer = function () {
-    if (bullets.length < MAX_BULLETS) {
-        var bullet_1 = createBullet();
-        bullets.push(bullet_1);
-        updateBullets();
-        var moveBullet_1 = setInterval(function () {
-            bullet_1.y -= SPEED_BULLETS;
-            if (bullet_1.y < 0) {
-                app.stage.removeChild(bullet_1);
-                clearInterval(moveBullet_1);
-            }
-        }, 1000 / 60);
+    if (!playerBullets.length) {
+        return;
     }
+    var bullet = playerBullets.pop();
+    bullet.x = player.x;
+    bullet.y = player.y;
+    app.stage.addChild(bullet);
+    playerBulletsOnStage.push(bullet);
+    updateBulletsText();
+    var moveBullet = setInterval(function () { return __awaiter(void 0, void 0, void 0, function () {
+        return __generator(this, function (_a) {
+            bullet.y -= SPEED_BULLETS;
+            if (playerBullets.length === 0) {
+                if (bullet.y < 0) {
+                    loseText.visible = true;
+                    stopAnimation('gameTimer', 250);
+                }
+            }
+            if (bullet.y < 0) {
+                app.stage.removeChild(bullet);
+                playerBulletsOnStage.pop();
+                clearInterval(moveBullet);
+            }
+            return [2 /*return*/];
+        });
+    }); }, 1000 / 60);
 };
 var shootOutBoss = function () {
     var bossBullet = createBossBullet();
-    bossBullets.push(bossBullet);
+    app.stage.addChild(bossBullet);
+    bossBulletsOnStage.push(bossBullet);
     var moveBossBullet = setInterval(function () {
         bossBullet.y += SPEED_BULLETS;
         if (bossBullet.y > appHeight) {
             clearInterval(moveBossBullet);
             app.stage.removeChild(bossBullet);
+            bossBulletsOnStage.pop();
         }
     }, 1000 / 60);
 };
 var detectCollisionsWithAsteroid = function () {
-    for (var i = bullets.length - 1; i >= 0; i--) {
-        var bullet = bullets[i];
-        for (var j = asteroids.length - 1; j >= 0; j--) {
-            var asteroid = asteroids[j];
-            if (bullet.x > asteroid.x - asteroid.width / 2 &&
-                bullet.x < asteroid.x + asteroid.width / 2 &&
-                bullet.y > asteroid.y - asteroid.height / 2 &&
-                bullet.y < asteroid.y + asteroid.height / 2) {
-                bullet.x = 0;
-                bullet.y = 0;
-                asteroids.splice(j, 1);
-                app.stage.removeChild(bullet);
-                app.stage.removeChild(asteroid);
-            }
-        }
-    }
-};
-var detectCollisionsWithBullets = function () {
-    for (var i = bullets.length - 1; i >= 0; i--) {
-        var bullet = bullets[i];
-        for (var j = bossBullets.length - 1; j >= 0; j--) {
-            var bossBullet = bossBullets[j];
-            if (bullet.x > bossBullet.x - bossBullet.width / 2 &&
-                bullet.x < bossBullet.x + bossBullet.width / 2 &&
-                bullet.y > bossBullet.y - bossBullet.height / 2 &&
-                bullet.y < bossBullet.y + bossBullet.height / 2) {
-                bossBullet.x = 0;
-                bossBullet.y = 0;
-                bossBullets.splice(j, 1);
-                app.stage.removeChild(bullet);
-                app.stage.removeChild(bossBullet);
-            }
-        }
-    }
+    asteroids.forEach(function (asteroid, ai) {
+        _detectCollisionsWithObjects(playerBulletsOnStage, asteroid, function (bulletIdx) {
+            app.stage.removeChild(playerBulletsOnStage[bulletIdx]);
+            app.stage.removeChild(asteroid);
+            asteroids.splice(ai, 1);
+            playerBulletsOnStage.splice(bulletIdx, 1);
+        });
+    });
 };
 var detectCollisionsWithBoss = function () {
-    for (var i = bullets.length - 1; i >= 0; i--) {
-        var bullet = bullets[i];
-        if (bullet.x > boss.x - boss.width / 2 &&
-            bullet.x < boss.x + boss.width / 2 &&
-            bullet.y > boss.y - boss.height / 2 &&
-            bullet.y < boss.y + boss.height / 2) {
-            hitBoss();
-            bullet.x = 0;
-            bullet.y = 0;
-            app.stage.removeChild(bullet);
-        }
-    }
+    console.log('shoot');
+    _detectCollisionsWithObjects(playerBulletsOnStage, boss, function (bulletIdx) {
+        hitBoss();
+        app.stage.removeChild(playerBulletsOnStage[bulletIdx]);
+        playerBulletsOnStage.splice(bulletIdx, 1);
+    });
 };
 var detectCollisionsWithPlayer = function () {
-    for (var i = bossBullets.length - 1; i >= 0; i--) {
-        var bossBullet = bossBullets[i];
-        if (bossBullet.x > player.x - player.width / 2 &&
-            bossBullet.x < player.x + player.width / 2 &&
-            bossBullet.y > player.y - player.height / 2 &&
-            bossBullet.y < player.y + player.height / 2) {
-            loseText.visible = true;
-            app.stage.removeChild(bossBullet);
-            stopAnimation('moveBossBullet', 200);
-            bossBullets.splice(i, 1);
-            app.stage.removeChild(bossBullet);
-        }
-    }
+    _detectCollisionsWithObjects(bossBulletsOnStage, player, function () {
+        loseText.visible = true;
+        stopAnimation('moveBossBullet', 200);
+    });
 };
-var checkGameStatus = function () {
-    if (asteroids.length === 0 && !levelTwoStarted) {
-        clearInterval(gameTimer);
-        levelTwoStarted = true;
-        startLevelTwo();
-    }
-    else if (bullets.length === MAX_BULLETS) {
-        var lastBullet = bullets[MAX_BULLETS - 1];
-        if (lastBullet.y < 0) {
-            loseText.visible = true;
-            clearInterval(gameTimer);
-            app.ticker.stop();
+var detectCollisionsWithBullets = function () {
+    playerBulletsOnStage.forEach(function (playerBullet, pbi) {
+        bossBulletsOnStage.forEach(function (bossBullet, bbi) {
+            if (playerBullet.x > bossBullet.x - bossBullet.width / 2 &&
+                playerBullet.x < bossBullet.x + bossBullet.width / 2 &&
+                playerBullet.y > bossBullet.y - bossBullet.height / 2 &&
+                playerBullet.y < bossBullet.y + bossBullet.height / 2) {
+                bossBulletsOnStage.splice(bbi, 1);
+                playerBulletsOnStage.splice(pbi, 1);
+                app.stage.removeChild(playerBullet);
+                app.stage.removeChild(bossBullet);
+            }
+        });
+    });
+};
+var _detectCollisionsWithObjects = function (bullets, goalObject, callback) {
+    bullets.forEach(function (bullet, index) {
+        if (bullet.x > goalObject.x - goalObject.width / 2 &&
+            bullet.x < goalObject.x + goalObject.width / 2 &&
+            bullet.y > goalObject.y - goalObject.height / 2 &&
+            bullet.y < goalObject.y + goalObject.height / 2) {
+            callback(index);
         }
-    }
+    });
 };
 var handlePlayerAction = function (e) {
     if (e.key == "ArrowLeft" && player.x - player.width / 2 > 0) {
@@ -290,34 +304,21 @@ var moveBoss = function () {
         bossSpeed *= -1;
     }
 };
-var updateBullets = function () {
-    bulletText.text = 'Bullets: ' + (MAX_BULLETS - bullets.length);
+var updateBulletsText = function () {
+    bulletText.text = 'Bullets: ' + playerBullets.length;
 };
-var updateTimer = function () {
+var updateTimerText = function () {
     timerText.text = 'Time: ' + remainingTime;
 };
 var startGameTimer = function () {
     gameTimer = setInterval(function () {
         remainingTime--;
-        updateTimer();
+        updateTimerText();
         if (remainingTime <= 0) {
             loseText.visible = true;
-            stopAnimation('gameTimer', 500);
+            stopAnimation('gameTimer', 250);
         }
     }, 1000);
-};
-startGameTimer();
-var resetGame = function () {
-    asteroids.forEach(function (asteroid) { return app.stage.removeChild(asteroid); });
-    bullets = [];
-    remainingTime = GAME_TIME;
-    bulletText.text = 'Bullets: ' + MAX_BULLETS;
-    timerText.text = 'Time: ' + remainingTime;
-    player.x = appWidth / 2;
-    player.y = appHeight - 64;
-    winText.visible = false;
-    loseText.visible = false;
-    startGameTimer();
 };
 var hitBoss = function () {
     bossHP--;
@@ -328,7 +329,7 @@ var hitBoss = function () {
     if (bossHP === 0) {
         winText.text = 'YOU WIN';
         winText.visible = true;
-        stopAnimation('gameTimer', 0);
+        stopAnimation('gameTimer', 250);
     }
 };
 var stopAnimation = function (nameTimeout, time) {
@@ -339,7 +340,25 @@ var stopAnimation = function (nameTimeout, time) {
 };
 // Player Actions
 window.addEventListener("keydown", handlePlayerAction);
-// Start Level I
+var checkGameStatus = function () {
+    if (asteroids.length === 0 && !levelTwoStarted) {
+        clearInterval(gameTimer);
+        levelTwoStarted = true;
+        startLevelTwo();
+    }
+};
+var resetGame = function () {
+    playerBullets = new Array(MAX_BULLETS).fill(null).map(function () { return createPlayerBullet(); });
+    remainingTime = GAME_TIME;
+    bulletText.text = 'Bullets: ' + MAX_BULLETS;
+    timerText.text = 'Time: ' + remainingTime;
+    player.x = appWidth / 2;
+    player.y = appHeight - 64;
+    winText.visible = false;
+    loseText.visible = false;
+    startGameTimer();
+};
+// Start Animation
 app.ticker.add(function () {
     detectCollisionsWithAsteroid();
     checkGameStatus();
@@ -355,12 +374,20 @@ app.ticker.add(function () {
         }
     }
 });
+// Start Level I
+var startLevelOne = function () {
+    resetGame();
+    for (var i = 0; i < MAX_ASTEROIDS; i++) {
+        createAndMoveAsteroid();
+    }
+};
 // Start Level II
 var startLevelTwo = function () {
     resetGame();
     createBoss();
     createBossHealthBar();
 };
+startLevelOne();
 
 
 /***/ }),
