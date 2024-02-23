@@ -12,7 +12,7 @@ document.body.appendChild(app.view);
 // Constants
 const GAME_TIME: number = 60;
 const NUMBER: number = 10;
-const MAX_ASTEROIDS: number = 2;
+const MAX_ASTEROIDS: number = NUMBER;
 const MAX_BULLETS: number = NUMBER;
 const SPEED_ASTEROIDS: number = 3;
 const SPEED_BULLETS: number = 5;
@@ -333,7 +333,7 @@ const checkGameStatus = (): void => {
 };
 
 const resetGame = (): void => {
-    playerBullets = new Array(MAX_BULLETS).fill(createPlayerBullet());
+    playerBullets = new Array(MAX_BULLETS).fill(null).map(() => createPlayerBullet());
 
     remainingTime = GAME_TIME;
     bulletText.text = 'Bullets: ' + MAX_BULLETS;
