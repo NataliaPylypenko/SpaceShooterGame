@@ -7,7 +7,7 @@ import {Boss} from "./Boss";
 export class Game {
     static readonly GAME_TIME: number = 60;
     static readonly MAX_BULLETS: number = 10;
-    static readonly MAX_ASTEROIDS: number = 1;
+    static readonly MAX_ASTEROIDS: number = 10;
 
     private events: EventEmitter;
     private app: PIXI.Application<HTMLCanvasElement>;
