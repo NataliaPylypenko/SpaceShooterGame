@@ -572,7 +572,7 @@ var Game = /** @class */ (function () {
     };
     Game.GAME_TIME = 60;
     Game.MAX_BULLETS = 10;
-    Game.MAX_ASTEROIDS = 1;
+    Game.MAX_ASTEROIDS = 10;
     return Game;
 }());
 
