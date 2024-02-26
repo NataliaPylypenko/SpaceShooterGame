@@ -148,5 +148,6 @@ export class Game {
         this.updateBulletsText(Game.MAX_BULLETS);
         this.startTimer();
         this._player.respawn();
+        this._player.chargeBullets();
     }
 }

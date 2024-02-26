@@ -38,7 +38,12 @@ export class BulletWatcher {
     }
 
     public hitObject(index: number): void {
-        this.objects[index].hit()
+        const object = this.objects[index];
+        object.hit();
+
+        if(object.constructor.name === 'Asteroid'){
+            this.objects.splice(index, 1);
+        }
     }
 
     public addBullet(bullet: PIXI.Graphics): void {
